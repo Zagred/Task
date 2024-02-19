@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.IO;
@@ -38,23 +39,11 @@ namespace Task
             }
             return xmlFiles;
         }
-        private static List<string> CsFiles(List<string> files)
-        {
-            List<string> csFiles = new List<string>();
-            foreach (var path in files)
-            {
-                foreach (var cs in Directory.GetFiles(path, "*.cs"))
-                {
-                    csFiles.Add(cs);
-                }
-            }
-            return csFiles;
-        }
+
         private static void xmlArguments(string path)
         {
             List<string> Folders = Init_Dict(path);
             List<string> xmlFiles = XmlFiles(Folders);
-            List<string> csFiles = CsFiles(Folders);
             List<string> arguments = new List<string>();
             var htmlDoc = new HtmlDocument();
 
@@ -70,45 +59,35 @@ namespace Task
 
                 }
             }
-            CallMethodByName(arguments, csFiles);
+            CallMethodByName(arguments);
 
         }
 
-        public static void CallMethodByName(List<string> args, List<string> cs)
+        public static void CallMethodByName(List<string> args)
         {
             List<string> notMonitoring = new List<string>();
             foreach (var arg in args)
             {
-                // Console.WriteLine(arg);
-                foreach (string path in cs)
+
+                if (arg.Length != 0)
                 {
-                    string fileText = null;
-                    fileText = File.ReadAllText(path);
-                    if (fileText.Contains(arg) && !fileText.Contains($"[MonitoringTask((int)eMonitoringTasks.{arg})]") && path.Contains("ShoogerProcessors"))
+                    try
+                    {
+                        Assembly SampleAssembly;
+                        SampleAssembly = Assembly.LoadFrom(@"C:\Users\PlamenPandev\Desktop\Projects\shared\ShoogerProcessors\bin\Debug\ShoogerProcessors.exe");
+                        MethodInfo Method = SampleAssembly.GetType("ShoogerProcessors.Program").GetMethod(arg, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+                        if (Method != null)
+                        {
+                            Method.CustomAttributes.First().ToString();
+
+                        }
+                    }
+                    catch
                     {
                         notMonitoring.Add(arg);
                     }
                 }
-                //if (arg.Length != 0)
-                //{
-                //    MethodInfo method = null;
-                //    string methodName = arg;
-                //    Type type = typeof(Program);
-
-                //    method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-
-                //    if (method != null)
-                //    {
-                //        //Console.WriteLine(method.GetParameters());
-                //    }
-                //    else
-                //    {
-                //        Console.WriteLine($"The method {methodName} does not exist");
-
-                //    }
-                //}
             }
-
             foreach (string element in notMonitoring)
             {
                 Console.WriteLine(element);
@@ -118,7 +97,7 @@ namespace Task
         static void Main(string[] args)
         {
 
-            string basePath = @"C:\Users\PlamenPandev\Desktop\Projects\shared";
+            string basePath = @"C:\Users\PlamenPandev\Desktop\Projects\Task\Task";
             xmlArguments(basePath);
 
         }
